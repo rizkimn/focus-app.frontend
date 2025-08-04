@@ -22,6 +22,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _registerUser() async {
     if (_formKey.currentState!.validate()) {
+      final rootNavigator = Navigator.of(context, rootNavigator: true);
+
       final username = _usernameController.text;
       final email = _emailController.text;
       final password = _passwordController.text;
@@ -34,8 +36,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             'password': password,
             'password_confirmation': confirmPassword,
           });
-
-      print(bodyParams);
 
       try {
         // Tampilkan loading indicator
@@ -56,7 +56,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
 
         // Tutup loading indicator
-        Navigator.of(context).pop();
+        rootNavigator.pop();
 
         // Proses response
         if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -65,7 +65,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           print('Registrasi berhasil: $responseData');
 
           // Navigasi ke halaman home
-          Navigator.pushReplacementNamed(context, '/login');
+          if (mounted) Navigator.pushReplacementNamed(context, '/login');
         } else {
           // Login gagal
           final errorData = jsonDecode(response.body);

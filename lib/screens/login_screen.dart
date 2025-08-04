@@ -19,6 +19,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _loginUser() async {
     if (_formKey.currentState!.validate()) {
+      final rootNavigator = Navigator.of(context, rootNavigator: true);
+
       final username = _usernameController.text;
       final password = _passwordController.text;
       final apiUrl = dotenv.env['API_BASE_URL'];
@@ -45,7 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
 
         // Tutup loading indicator
-        Navigator.of(context).pop();
+        rootNavigator.pop();
 
         // Proses response
         if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -54,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
           print('Login berhasil: $responseData');
 
           // Navigasi ke halaman home
-          Navigator.pushReplacementNamed(context, '/home');
+          if (mounted) Navigator.pushReplacementNamed(context, '/home');
         } else {
           // Login gagal
           final errorData = jsonDecode(response.body);
@@ -62,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       } catch (e) {
         // Tangani error
-        Navigator.of(context).pop();
+        rootNavigator.pop();
         _showErrorDialog('Network error: $e');
       }
     }
