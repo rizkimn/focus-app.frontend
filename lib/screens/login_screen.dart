@@ -275,6 +275,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ElevatedButton(
                             onPressed: () {
                               // Logic of redirecting
+                              Navigator.pushReplacementNamed(context, '/register');
                             },
                             style: ElevatedButton.styleFrom(
                               padding: EdgeInsets.symmetric(

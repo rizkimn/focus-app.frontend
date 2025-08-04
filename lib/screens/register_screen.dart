@@ -323,6 +323,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ElevatedButton(
                             onPressed: () {
                               // Logic of redirecting
+                              Navigator.pushReplacementNamed(context, '/login');
                             },
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
