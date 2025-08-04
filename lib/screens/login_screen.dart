@@ -1,5 +1,8 @@
 import 'package:bootstrap_icons/bootstrap_icons.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,6 +16,70 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
+
+  Future<void> _loginUser() async {
+    if (_formKey.currentState!.validate()) {
+      final username = _usernameController.text;
+      final password = _passwordController.text;
+      final apiUrl = dotenv.env['API_BASE_URL'];
+
+      try {
+        // Tampilkan loading indicator
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => Center(child: CircularProgressIndicator()),
+        );
+
+        // Kirim permintaan POST
+        final response = await http.post(
+          Uri.parse('$apiUrl/auth/login'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'username': username,
+            'password': password,
+          }),
+        );
+
+        // Tutup loading indicator
+        Navigator.of(context).pop();
+
+        // Proses response
+        if (response.statusCode == 200) {
+          // Login sukses
+          final responseData = jsonDecode(response.body);
+          print('Login berhasil: $responseData');
+
+          // Navigasi ke halaman home
+          Navigator.pushReplacementNamed(context, '/home');
+        } else {
+          // Login gagal
+          final errorData = jsonDecode(response.body);
+          _showErrorDialog(errorData['message'] ?? 'Login failed');
+        }
+      } catch (e) {
+        // Tangani error
+        Navigator.of(context).pop();
+        _showErrorDialog('Network error: $e');
+      }
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Login Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -225,13 +292,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ]
                                 ),
                                 child: ElevatedButton(
-                                  onPressed: () {
-                                    if (_formKey.currentState!.validate()) {
-                                      // Login logic here
-                                      final username = _usernameController.text;
-                                      final password = _passwordController.text;
-                                    }
-                                  },
+                                  onPressed: _loginUser,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.transparent,
                                     shadowColor: Colors.transparent,
