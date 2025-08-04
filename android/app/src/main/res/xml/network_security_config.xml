@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Untuk development: izinkan semua HTTP -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- Untuk produksi (rekomendasi):
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">api.domain-anda.com</domain>
+    </domain-config>
+    -->
+</network-security-config>
