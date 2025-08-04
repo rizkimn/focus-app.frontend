@@ -1,5 +1,8 @@
 import 'package:bootstrap_icons/bootstrap_icons.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -15,6 +18,82 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
+  Future<void> _registerUser() async {
+    if (_formKey.currentState!.validate()) {
+      final username = _usernameController.text;
+      final email = _emailController.text;
+      final password = _passwordController.text;
+      final confirmPassword = _confirmPasswordController.text;
+      final apiUrl = dotenv.env['API_BASE_URL'];
+
+      final bodyParams = jsonEncode({
+            'username': username,
+            'email': email,
+            'password': password,
+            'password_confirmation': confirmPassword,
+          });
+
+      print(bodyParams);
+
+      try {
+        // Tampilkan loading indicator
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => Center(child: CircularProgressIndicator()),
+        );
+
+        // Kirim permintaan POST
+        final response = await http.post(
+          Uri.parse('$apiUrl/auth/register'),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: bodyParams
+        );
+
+        // Tutup loading indicator
+        Navigator.of(context).pop();
+
+        // Proses response
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          // Login sukses
+          final responseData = jsonDecode(response.body);
+          print('Registrasi berhasil: $responseData');
+
+          // Navigasi ke halaman home
+          Navigator.pushReplacementNamed(context, '/login');
+        } else {
+          // Login gagal
+          final errorData = jsonDecode(response.body);
+          _showErrorDialog(errorData['message'] ?? 'Login failed');
+        }
+      } catch (e) {
+        // Tangani error
+        _showErrorDialog('Network error: $e');
+      }
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Registration Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -157,6 +236,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         if (value == null || value.isEmpty) {
                                           return 'Please enter your email';
                                         }
+                                        // TAMBAHKAN VALIDASI EMAIL
+                                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                                          return 'Please enter a valid email';
+                                        }
                                         return null;
                                       },
                                     ),
@@ -201,20 +284,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     // Password Confirmation Field with underline border (no gap)
                                     TextFormField(
                                       controller: _confirmPasswordController,
-                                      obscureText: _obscurePassword,
+                                      obscureText: _obscureConfirmPassword,
                                       decoration: InputDecoration(
                                         labelText: 'Confirm Password',
                                         prefixIcon: const Icon(BootstrapIcons.key),
                                         suffixIcon: IconButton(
                                           icon: Icon(
-                                            _obscurePassword
+                                            _obscureConfirmPassword
                                                 ? BootstrapIcons.eye_slash
                                                 : BootstrapIcons.eye,
                                             color: Colors.black.withAlpha(60),
                                           ),
                                           onPressed: () {
                                             setState(() {
-                                              _obscurePassword = !_obscurePassword;
+                                              _obscureConfirmPassword = !_obscureConfirmPassword;
                                             });
                                           },
                                         ),
@@ -269,15 +352,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   ]
                                 ),
                                 child: ElevatedButton(
-                                  onPressed: () {
-                                    if (_formKey.currentState!.validate()) {
-                                      // Login logic here
-                                      final username = _usernameController.text;
-                                      final email = _emailController.text;
-                                      final password = _passwordController.text;
-                                      final confirmPassword = _confirmPasswordController.text;
-                                    }
-                                  },
+                                  onPressed: _registerUser,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.transparent,
                                     shadowColor: Colors.transparent,

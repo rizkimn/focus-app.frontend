@@ -34,7 +34,10 @@ class _LoginScreenState extends State<LoginScreen> {
         // Kirim permintaan POST
         final response = await http.post(
           Uri.parse('$apiUrl/auth/login'),
-          headers: {'Content-Type': 'application/json'},
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
           body: jsonEncode({
             'username': username,
             'password': password,
@@ -45,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.of(context).pop();
 
         // Proses response
-        if (response.statusCode == 200) {
+        if (response.statusCode >= 200 && response.statusCode < 300) {
           // Login sukses
           final responseData = jsonDecode(response.body);
           print('Login berhasil: $responseData');
