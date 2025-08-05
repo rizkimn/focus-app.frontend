@@ -1,8 +1,6 @@
 import 'package:bootstrap_icons/bootstrap_icons.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:first_app/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,56 +14,25 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   Future<void> _loginUser() async {
     if (_formKey.currentState!.validate()) {
-      final rootNavigator = Navigator.of(context, rootNavigator: true);
-
-      final username = _usernameController.text;
-      final password = _passwordController.text;
-      final apiUrl = dotenv.env['API_BASE_URL'];
+      setState(() => _isLoading = true);
 
       try {
-        // Tampilkan loading indicator
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => Center(child: CircularProgressIndicator()),
+        await AuthService.login(
+          username: _usernameController.text,
+          password: _passwordController.text,
         );
 
-        // Kirim permintaan POST
-        final response = await http.post(
-          Uri.parse('$apiUrl/auth/login'),
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: jsonEncode({
-            'username': username,
-            'password': password,
-          }),
-        );
-
-        // Tutup loading indicator
-        rootNavigator.pop();
-
-        // Proses response
-        if (response.statusCode >= 200 && response.statusCode < 300) {
-          // Login sukses
-          final responseData = jsonDecode(response.body);
-          print('Login berhasil: $responseData');
-
-          // Navigasi ke halaman home
-          if (mounted) Navigator.pushReplacementNamed(context, '/home');
-        } else {
-          // Login gagal
-          final errorData = jsonDecode(response.body);
-          _showErrorDialog(errorData['message'] ?? 'Login failed');
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/home');
         }
       } catch (e) {
-        // Tangani error
-        rootNavigator.pop();
-        _showErrorDialog('Network error: $e');
+        _showErrorDialog(e.toString());
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
       }
     }
   }
@@ -374,6 +341,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                     ),
+                    if (_isLoading)
+                      const Center(child: CircularProgressIndicator()),
                   ],
                 ),
               ),
