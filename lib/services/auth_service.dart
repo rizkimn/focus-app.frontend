@@ -29,6 +29,13 @@ class AuthService {
     await saveUserData(currentData);
   }
 
+  // Hapus user data (logout)
+  static Future<void> deleteUserData() async {
+    await _storage.delete(key: _keyUserData);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyUserData);
+  }
+
   // Simpan token
   static Future<void> saveTokens(String accessToken) async {
     await _storage.write(key: _keyAccessToken, value: accessToken);

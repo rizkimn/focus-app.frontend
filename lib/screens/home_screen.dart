@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:first_app/providers/timer_provider.dart';
+import 'package:first_app/providers/auth_provider.dart';
 import 'package:first_app/services/notification_service.dart';
 import 'package:first_app/services/auth_service.dart';
 
@@ -67,16 +68,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               return const Center(child: CircularProgressIndicator());
             }
 
-            if (snapshot.hasError || snapshot.data == null) {
+            if (snapshot.hasError || snapshot.data == null || !snapshot.hasData) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 Navigator.pushReplacementNamed(context, '/login');
               });
+              return SizedBox.shrink();
             }
 
             final userInfo = snapshot.data!;
             final username = userInfo['username'] ?? 'Unknown';
             final email = userInfo['email'] ?? 'unknown@example.com';
-            final avatarName = userInfo['avatarName'] ?? '??';
 
             return SafeArea(
               child: Container(
@@ -155,13 +156,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                         ),
                                       ]
                                     ),
-                                    child: Icon(BootstrapIcons.bell),
+                                    child: Icon(BootstrapIcons.box_arrow_right),
                                   )
                                 ],
                               ),
                               iconSize: 21,
                               color: Colors.blueGrey.shade300,
-                              onPressed: () {},
+                              onPressed: () async {
+                                final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+                                await authProvider.logout();
+
+                                Navigator.pushReplacementNamed(context, '/login');
+                              },
                             ),
                           ],
                         ),

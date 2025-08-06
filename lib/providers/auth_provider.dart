@@ -20,6 +20,8 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> logout() async {
     await AuthService.deleteTokens();
+    await AuthService.deleteUserData();
+    await FlutterSecureStorage().deleteAll();
     _accessToken = null;
     notifyListeners();
   }
